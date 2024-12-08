@@ -180,7 +180,7 @@ void store_directory(const char *path, char *name, int tree_level, tree* t, int 
 			p = directory;
 			// Check if it's a directory
 			if(S_ISDIR(entry_info.st_mode)){
-				directory_count++;
+				//directory_count++;
 				tree_level++;
 				// Recursively list the subdirectory
 				store_directory(full_path, file->name, tree_level, &p->first_child, options, argv);
@@ -192,7 +192,7 @@ void store_directory(const char *path, char *name, int tree_level, tree* t, int 
 					continue;
 				//Its a File
 				p->first_child = file;
-				file_count++;
+			//	file_count++;
 			}			
 			directory->child_count++;
 		}
@@ -202,7 +202,7 @@ void store_directory(const char *path, char *name, int tree_level, tree* t, int 
 				p = p->next_sibling;
 			// Check if it's a directory
 			if(S_ISDIR(entry_info.st_mode)){
-				directory_count++;
+				//directory_count++;
 				tree_level++;
 				// Recursively list the subdirectory
 				store_directory(full_path, file->name, tree_level, &p->next_sibling, options, argv);
@@ -214,7 +214,7 @@ void store_directory(const char *path, char *name, int tree_level, tree* t, int 
 					continue;
 				//Its a File
 				p->next_sibling = file;
-				file_count++;
+			//	file_count++;
 			}	
 			directory->child_count++;
 		}
@@ -651,13 +651,22 @@ void regular_display(tree t, stack *branch_ends, int *options, char *argv[], FIL
 					reset(fp);
 					fprintf(stdout, "\n");
 				}
-				
+				directory_count++;
 				
 				prev_childCount = count;
 				
-		
-				//Recursively call subdirectories
-				regular_display(p, branch_ends, options, argv, fp);
+				if(options != NULL && options[LIMIT] != 0){
+					if(p->level < options[LIMIT] - 1)
+						regular_display(p, branch_ends, options, argv, fp);
+				}
+				else if(options != NULL && options[LIMIT] == 0){
+					//Recursively call subdirectories
+					regular_display(p, branch_ends, options, argv, fp);
+				}
+				else if(options == NULL){
+					//Recursively call subdirectories
+					regular_display(p, branch_ends, options, argv, fp);
+				}
 				
 				if(p->child_count != 0)
 					pop(&(*branch_ends));
@@ -725,7 +734,7 @@ void regular_display(tree t, stack *branch_ends, int *options, char *argv[], FIL
 						printf("]  ");
 					
 				}
-					
+				file_count++;
 				set_file_colour(p->full_path, fp);
 				if(fp){
 					
@@ -765,6 +774,7 @@ void regular_JSON_display(tree t, stack *branch_ends, int *options, char *argv[]
 					else
 						fprintf(stdout, "  ");
 				}
+				directory_count++;
 				if(!isEmpty(*branch_ends) && count == 0){
 					if(fp){
 						fprintf(fp, "  {\"type\":\"directory\",\"name\":%s,",p->name);
@@ -865,7 +875,22 @@ void regular_JSON_display(tree t, stack *branch_ends, int *options, char *argv[]
 				}
 				prev_childCount = count;
 				
-				regular_JSON_display(p, branch_ends, options, argv, fp);
+				
+				
+				
+				if(options != NULL && options[LIMIT] != 0){
+					if(p->level < options[LIMIT] - 1)
+						regular_JSON_display(p, branch_ends, options, argv, fp);
+				}
+				else if(options != NULL && options[LIMIT] == 0){
+					//Recursively call subdirectories
+					regular_JSON_display(p, branch_ends, options, argv, fp);
+				}
+				else if(options == NULL){
+					//Recursively call subdirectories
+					regular_JSON_display(p, branch_ends, options, argv, fp);
+				}
+				
 				
 				if(p->child_count != 0){
 					pop(&(*branch_ends));
@@ -889,7 +914,8 @@ void regular_JSON_display(tree t, stack *branch_ends, int *options, char *argv[]
 						fprintf(fp, "  ");
 					else
 						fprintf(stdout, "  ");
-				}			
+				}	
+				file_count++;		
 				if(count == 0){
 					if(fp){
 						fprintf(fp, "  {\"type\":\"file\",\"name\":\"%s\"", p->name);
